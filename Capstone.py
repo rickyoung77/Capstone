@@ -1,6 +1,15 @@
 from nba_api.stats.endpoints import leaguegamelog
+from scipy.stats import ttest_ind
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import plotly.express as px
 import pandas as pd
 import statsmodels.api as sm
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Team region mapping: North (1) or South (0)
 team_regions = {
@@ -122,3 +131,119 @@ if __name__ == "__main__":
     # Perform regression analysis
     perform_regression(processed_data)
     #perform_regression(filtered_data)
+
+
+#Visuals
+
+#Regional Comparison
+#To compare gameplay SoP across regions.
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Region', y='SoP', data=processed_data)
+plt.title('Strength of Gameplay (SoP) by Region')
+plt.xlabel('Region (0 = South, 1 = North)')
+plt.ylabel('Strength of Gameplay (SoP)')
+plt.show()
+
+#Regression Analysis
+
+#Visualize the relationship between SoP and Region
+sns.lmplot(x='Region', y='SoP', data=processed_data, ci=95, height=6, aspect=1.5)
+plt.title('Regression Analysis: SoP vs. Region')
+plt.xlabel('Region (0 = South, 1 = North)')
+plt.ylabel('Strength of Gameplay (SoP)')
+plt.show()
+
+#Analyze how SoP vary over seasons
+seasonal_data = processed_data.groupby('Season')['SoP'].mean().reset_index()
+plt.figure(figsize=(10, 6))
+sns.lineplot(x='Season', y='SoP', data=seasonal_data, marker='o')
+plt.title('Average Strength of Gameplay (SoP) Over Seasons')
+plt.xlabel('Season')
+plt.ylabel('Average SoP')
+plt.xticks(rotation=45)
+plt.show()
+
+#Correlation between different metrics to understand relationships.
+plt.figure(figsize=(10, 8))
+correlation_matrix = processed_data[['FGE', 'TOV%', 'OREB%', 'FTR', 'SoP']].corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap of Gameplay Metrics')
+plt.show()
+
+#comparing team performance
+# Calculate average metrics by team
+team_avg_metrics = processed_data.groupby('TEAM_ABBREVIATION')[['SoP', 'FGE', 'TOV%', 'OREB%']].mean().reset_index()
+plt.figure(figsize=(12, 6))
+sns.barplot(x='TEAM_ABBREVIATION', y='SoP', data=team_avg_metrics, color='green')
+plt.title('Average Strength of Gameplay (SoP) by Team')
+plt.xlabel('Team')
+plt.ylabel('SoP')
+plt.xticks(rotation=45)
+plt.show()
+
+#using elbow method to determine the optimal number of clusters to apply to kmeans 
+def elbow_method(data):
+    features = data[['FGE', 'TOV%', 'OREB%', 'FTR', 'SoP', 'Region']]
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(features)
+    inertia = []
+    for k in range(1, 11):  
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans.fit(scaled_features)
+        inertia.append(kmeans.inertia_)
+    
+#plotting elbow curve 
+    plt.figure(figsize=(8, 5))
+    plt.plot(range(1, 11), inertia, marker='o')
+    plt.xlabel('Number of Clusters')
+    plt.ylabel('Inertia')
+    plt.title('Elbow Method for Optimal K (with Region)')
+    plt.show()
+elbow_method(processed_data)
+
+# functiong for performing k-means clustering between SoP and FGE across multiple seasons 
+def perform_kmeans(data, n_clusters):
+    features = data[['FGE', 'TOV%', 'OREB%', 'FTR', 'SoP', 'Region']]
+    
+    # standardize how data is weighed using standard scaler 
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(features)
+    
+    # kmeans clustering
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    data['Cluster'] = kmeans.fit_predict(scaled_features)
+    
+    # printing cluster centers
+    print("Cluster Centers (scaled):")
+    print(kmeans.cluster_centers_)
+    
+    return data, kmeans
+
+# Visualize clustering 
+def visualize_clusters_with_region(data):
+    plt.figure(figsize=(10, 6))
+    plt.scatter(data['FGE'], data['SoP'], c=data['Cluster'], cmap='plasma', alpha=0.7)
+    plt.xlabel('FGE')
+    plt.ylabel('Strength of Play (SoP)')
+    plt.title('K-Means Clustering by GamePlay Features')
+    plt.colorbar(label='Cluster')
+    plt.show()
+
+
+if __name__ == "__main__":
+    seasons = ['2010-11', '2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2018-19', '2020-21']
+    game_data = fetch_multiple_seasons(seasons)
+    processed_data = prepare_data(game_data)
+    # Expriment clustering between 3-4 clusters 
+    clustered_data, kmeans_model = perform_kmeans(processed_data, n_clusters=4)
+    visualize_clusters_with_region(clustered_data)
+
+# add comment
+sns.pairplot(
+    processed_data[['SoP', 'FGE', 'TOV%', 'OREB%', 'FTR', 'Region']],
+    hue='Region',
+    diag_kind='kde',
+    palette='coolwarm'
+)
+plt.suptitle('Pair Plot of Gameplay Metrics by Region', y=1.02)
+plt.show()
