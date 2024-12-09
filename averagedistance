@@ -4,6 +4,8 @@ from geopy.distance import geodesic
 from statsmodels.api import OLS, add_constant
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
+from math import radians, sin, cos, sqrt, atan2
+
 
 # Load the dataset
 file_path = 'regular_season_totals_2010_2024.csv'  # Replace with your file path
@@ -39,8 +41,17 @@ def calculate_distance(row):
     home_coords = row['Home_Coords']
     away_coords = row['Away_Coords']
     if None not in home_coords and None not in away_coords:
-        return geodesic(home_coords, away_coords).miles
+        # Use haversine function
+        return haversine(home_coords[0], home_coords[1], away_coords[0], away_coords[1])
     return None
+
+
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371  # Earth's radius in kilometers
+    dlat, dlon = radians(lat2 - lat1), radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return 2 * R * atan2(sqrt(a), sqrt(1 - a))
+
 
 # Process home/away teams and calculate distances
 nba_data['Home/Away'] = nba_data['MATCHUP'].apply(lambda x: 'Away' if '@' in x else 'Home')
@@ -54,31 +65,7 @@ nba_data['Travel_Distance'] = nba_data.apply(calculate_distance, axis=1)
 nba_data_cleaned = nba_data.dropna(subset=['Travel_Distance'])
 
 
-# new cleaning to adjust for certain confounding variables
 
-nba_data_cleaned['GAME_DATE'] = pd.to_datetime(nba_data_cleaned['GAME_DATE'])  # Ensure GAME_DATE is datetime
-
-# Sort by team and game date
-nba_data_cleaned = nba_data_cleaned.sort_values(by=['TEAM_ABBREVIATION', 'GAME_DATE'])
-
-# Calculate the difference in days between consecutive games
-nba_data_cleaned['Days_Between_Games'] = nba_data_cleaned.groupby('TEAM_ABBREVIATION')['GAME_DATE'].diff().dt.days
-
-# Flag back-to-back games (1 if played the next day, 0 otherwise)
-nba_data_cleaned['Back_to_Back'] = nba_data_cleaned['Days_Between_Games'].apply(lambda x: 1 if x == 1 else 0)
-
-
-
-# Calculate winning percentage for each team
-team_win_pct = team_stats.set_index('TEAM_ABBREVIATION')['Winning_Percentage']
-
-# Map the opponent's winning percentage to each game
-nba_data_cleaned['Opponent_Win_Pct'] = nba_data_cleaned['Away_Team'].map(team_win_pct)
-
-
-nba_data_cleaned['Is_Home_Game'] = nba_data_cleaned['Home/Away'].apply(lambda x: 1 if x == 'Home' else 0)
-
-##
 
 
 # Aggregate team stats
