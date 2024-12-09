@@ -130,10 +130,10 @@ if __name__ == "__main__":
     perform_regression(processed_data)
     #perform_regression(filtered_data)
 
-#Visuals
+# Visuals
 
-#Regional Comparison
-#To compare gameplay SoP across regions.
+# Regional Comparison
+# To compare gameplay SoP across regions.
 plt.figure(figsize=(8, 6))
 sns.boxplot(x='Region', y='SoP', data=processed_data)
 plt.title('Strength of Gameplay (SoP) by Region')
@@ -141,15 +141,15 @@ plt.xlabel('Region (0 = South, 1 = North)')
 plt.ylabel('Strength of Gameplay (SoP)')
 plt.show()
 
-#Regression Analysis
-#Visualize the relationship between SoP and Region
+# Regression Analysis
+# Visualize the relationship between SoP and Region
 sns.lmplot(x='Region', y='SoP', data=processed_data, ci=95, height=6, aspect=1.5)
 plt.title('Regression Analysis: SoP vs. Region')
 plt.xlabel('Region (0 = South, 1 = North)')
 plt.ylabel('Strength of Gameplay (SoP)')
 plt.show()
 
-#Analyze how SoP vary over seasons
+# Analyze how SoP vary over seasons
 seasonal_data = processed_data.groupby('Season')['SoP'].mean().reset_index()
 plt.figure(figsize=(10, 6))
 sns.lineplot(x='Season', y='SoP', data=seasonal_data, marker='o')
@@ -159,14 +159,14 @@ plt.ylabel('Average SoP')
 plt.xticks(rotation=45)
 plt.show()
 
-#Correlation between different metrics to understand relationships.
+# Correlation between different metrics to understand relationships.
 plt.figure(figsize=(10, 8))
 correlation_matrix = processed_data[['FGE', 'TOV%', 'OREB%', 'FTR', 'SoP']].corr()
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
 plt.title('Correlation Heatmap of Gameplay Metrics')
 plt.show()
 
-#comparing team performance
+# Comparing team performance
 # Calculate average metrics by team
 team_avg_metrics = processed_data.groupby('TEAM_ABBREVIATION')[['SoP', 'FGE', 'TOV%', 'OREB%']].mean().reset_index()
 plt.figure(figsize=(12, 6))
@@ -177,7 +177,7 @@ plt.ylabel('SoP')
 plt.xticks(rotation=45)
 plt.show()
 
-#using elbow method to determine the optimal number of clusters to apply to kmeans 
+# Using elbow method to determine the optimal number of clusters to apply to kmeans 
 def elbow_method(data):
     features = data[['FGE', 'TOV%', 'OREB%', 'FTR', 'SoP', 'Region']]
     scaler = StandardScaler()
@@ -188,7 +188,7 @@ def elbow_method(data):
         kmeans.fit(scaled_features)
         inertia.append(kmeans.inertia_)
     
-#plotting elbow curve 
+# Plotting elbow curve 
     plt.figure(figsize=(8, 5))
     plt.plot(range(1, 11), inertia, marker='o')
     plt.xlabel('Number of Clusters')
@@ -197,19 +197,19 @@ def elbow_method(data):
     plt.show()
 elbow_method(processed_data)
 
-# functiong for performing k-means clustering between SoP and FGE across multiple seasons 
+# Functiong for performing k-means clustering between SoP and FGE across multiple seasons 
 def perform_kmeans(data, n_clusters):
     features = data[['FGE', 'TOV%', 'OREB%', 'FTR', 'SoP', 'Region']]
     
-    # standardize how data is weighed using standard scaler 
+    # Standardize how data is weighed using standard scaler 
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(features)
     
-    # kmeans clustering
+    # Kmeans clustering
     kmeans = KMeans(n_clusters=n_clusters, random_state=42)
     data['Cluster'] = kmeans.fit_predict(scaled_features)
     
-    # printing cluster centers
+    # Printing cluster centers
     print("Cluster Centers (scaled):")
     print(kmeans.cluster_centers_)
     return data, kmeans
