@@ -126,12 +126,9 @@ if __name__ == "__main__":
     processed_data = prepare_data(game_data)
     filtered_data = filter_away_games_outside_region(processed_data)
 
-
-
     # Perform regression analysis
     perform_regression(processed_data)
     #perform_regression(filtered_data)
-
 
 #Visuals
 
@@ -145,7 +142,6 @@ plt.ylabel('Strength of Gameplay (SoP)')
 plt.show()
 
 #Regression Analysis
-
 #Visualize the relationship between SoP and Region
 sns.lmplot(x='Region', y='SoP', data=processed_data, ci=95, height=6, aspect=1.5)
 plt.title('Regression Analysis: SoP vs. Region')
@@ -216,7 +212,6 @@ def perform_kmeans(data, n_clusters):
     # printing cluster centers
     print("Cluster Centers (scaled):")
     print(kmeans.cluster_centers_)
-    
     return data, kmeans
 
 # Visualize clustering 
@@ -228,7 +223,6 @@ def visualize_clusters_with_region(data):
     plt.title('K-Means Clustering by GamePlay Features')
     plt.colorbar(label='Cluster')
     plt.show()
-
 
 if __name__ == "__main__":
     seasons = ['2010-11', '2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2018-19', '2020-21']
