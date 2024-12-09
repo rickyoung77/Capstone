@@ -38,23 +38,6 @@ def fetch_multiple_seasons(seasons):
     return pd.concat(all_data, ignore_index=True)
 
 
-'''
-def filter_away_games_outside_region(data):
-    # Add a binary variable for Away games using .loc
-    data.loc[:, 'Away'] = data['MATCHUP'].apply(lambda x: 1 if '@' in x else 0)
-
-    # Filter for Away games
-    away_games = data[data['Away'] == 1].copy()  # Use .copy() to avoid SettingWithCopyWarning
-
-    # Determine if the game is outside the team's region
-    away_games.loc[:, 'Outside_Region'] = away_games.apply(
-        lambda x: 1 if (x['Region'] != team_regions[x['TEAM_ABBREVIATION']]) else 0,
-        axis=1
-    )
-
-    # Filter for games outside the team's region
-    return away_games[away_games['Outside_Region'] == 1]
-'''
 
 
 # Function to calculate SoP and include Region
@@ -103,15 +86,6 @@ def perform_regression(data):
 
 
 
-# Regression on filtered dataset
-def perform_regression(filtered_data):
-    Y = filtered_data['SoP']  # Dependent variable
-    X = filtered_data[['Region']]  # Independent variable
-    X = sm.add_constant(X)
-
-    # Fit regression model
-    model = sm.OLS(Y, X).fit()
-    print(model.summary())
 
 
 # Main workflow
@@ -124,11 +98,9 @@ if __name__ == "__main__":
 
     # Prepare the data
     processed_data = prepare_data(game_data)
-    filtered_data = filter_away_games_outside_region(processed_data)
 
     # Perform regression analysis
     perform_regression(processed_data)
-    #perform_regression(filtered_data)
 
 # Visuals
 
@@ -241,3 +213,4 @@ sns.pairplot(
 )
 plt.suptitle('Pair Plot of Gameplay Metrics by Region', y=1.02)
 plt.show()
+
