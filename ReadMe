@@ -1,0 +1,10 @@
+This is our capstone project on comparing how region affects NBA performance
+
+There are two components to this code, first is the Capstone.py, to run that program you just need to make sure you have the packages installed
+You will also need to make sure you import the leaguegamelog from the nba api
+
+After you have all the correct packages and api imported the code will be able to run
+
+The other component is the additional method that we branched off to out of curiosity
+the averagedistance.py calculates the average total distance traveled per season and compares it to its win percentage.
+You will need the regular_season_totals_2010_2024 data set to run this as well as all the packages installed.
